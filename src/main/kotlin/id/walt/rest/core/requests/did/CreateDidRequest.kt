@@ -32,6 +32,7 @@ class KeyCreateDidRequest(override val keyAlias: String? = null) : CreateDidRequ
 class WebCreateDidRequest(
     val domain: String? = null,
     val path: String? = null,
+    val x5u: String? = null,
     override val keyAlias: String? = null,
 ) : CreateDidRequest("web")
 @Serializable

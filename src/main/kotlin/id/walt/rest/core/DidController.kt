@@ -79,7 +79,7 @@ object DidController {
     }
 
     private fun getOptions(request: CreateDidRequest) = when (request) {
-        is WebCreateDidRequest -> DidWebCreateOptions(request.domain ?: "walt.id", request.path)
+        is WebCreateDidRequest -> DidWebCreateOptions(request.domain ?: "walt.id", request.path, request.x5u)
         is EbsiCreateDidRequest -> DidEbsiCreateOptions(request.version)
         is CheqdCreateDidRequest -> DidCheqdCreateOptions(request.network)
         else -> null

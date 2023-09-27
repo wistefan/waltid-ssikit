@@ -84,6 +84,7 @@ object DidService {
 
     // region did-create
     fun create(method: DidMethod, keyAlias: String? = null, options: DidOptions? = null): String {
+        log.warn { "Options $options" }
         @Suppress("REDUNDANT_ELSE_IN_WHEN")
         val didUrl = when (method) {
             DidMethod.key -> createDidKey(keyAlias)
@@ -162,7 +163,6 @@ object DidService {
     }
 
     private fun createDidWeb(keyAlias: String?, options: DidWebCreateOptions?): String {
-
         options ?: throw Exception("DidWebOptions are mandatory")
         if (options.domain.isNullOrEmpty())
             throw IllegalArgumentException("Missing 'domain' parameter for creating did:web")
@@ -187,8 +187,7 @@ object DidService {
         val kid = didUrlStr + "#" + key.keyId
         ContextManager.keyStore.addAlias(key.keyId, kid)
 
-        val verificationMethods = buildVerificationMethods(key, kid, didUrlStr)
-
+        val verificationMethods = buildVerificationMethods(key, kid, didUrlStr, options.x5u)
 
         val keyRef = listOf(VerificationMethod.Reference(kid))
 
@@ -231,7 +230,7 @@ object DidService {
         val kid = didUrlStr + "#" + key.keyId
         ContextManager.keyStore.addAlias(keyId, kid)
 
-        val verificationMethods = buildVerificationMethods(key, kid, didUrlStr)
+        val verificationMethods = buildVerificationMethods(key, kid, didUrlStr, null)
 
         val didEbsi = DidEbsi(
             listOf(DID_CONTEXT_URL), // TODO Context not working "https://ebsi.org/ns/did/v1"
@@ -354,7 +353,8 @@ object DidService {
     private fun buildVerificationMethods(
         key: Key,
         kid: String,
-        didUrlStr: String
+        didUrlStr: String,
+        x5u: String?
     ): MutableList<VerificationMethod> {
         val keyType = when (key.algorithm) {
             EdDSA_Ed25519 -> Ed25519VerificationKey2019
@@ -371,7 +371,7 @@ object DidService {
                 )
             }"
         }
-        val publicKeyJwk = Klaxon().parse<Jwk>(keyService.toJwk(kid).toPublicJWK().toString())
+        val publicKeyJwk = Klaxon().parse<Jwk>(keyService.toJwk(kid).toPublicJWK().toString())!!.copy(x5u = x5u)
 
         val verificationMethods = mutableListOf(
             VerificationMethod(kid, keyType.name, didUrlStr, null, null, publicKeyJwk),
